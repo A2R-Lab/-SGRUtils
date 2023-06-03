@@ -1,17 +1,31 @@
 #include <stdio.h>
 
+__host__
 __device__
 void doubleLoopVals(int *starty, int *dy, int *startx, int *dx){
-    *starty = threadIdx.y;
-    *dy = blockDim.y;
-    *startx = threadIdx.x;
-    *dx = blockDim.x;
+    #ifdef __CUDA_ARCH__
+        *starty = threadIdx.y;
+        *dy = blockDim.y;
+        *startx = threadIdx.x;
+        *dx = blockDim.x;
+    #else
+        *starty = 0;
+        *dy = 1;
+        *startx = 0;
+        *dx = 1;
+    #endif
 }
 
+__host__
 __device__
 void singleLoopVals(int *start, int *delta){
-    *start = threadIdx.x + threadIdx.y*blockDim.x;
-    *delta = blockDim.x*blockDim.y;
+    #ifdef __CUDA_ARCH__
+        *start = threadIdx.x + threadIdx.y*blockDim.x;
+        *delta = blockDim.x*blockDim.y;
+    #else
+        *start = 0;
+        *delta = 1;
+    #endif
 }
 
 template <typename T>
@@ -31,6 +45,7 @@ T dqdd2dxd(T *dqdd, int r, int c, int num_pos){
 }
 
 template <typename T>
+__host__
 __device__ __forceinline__
 void _integrator(T * s_next_state, T * s_x, T *s_qdd, T dt, int num_pos){
     int start, delta;
