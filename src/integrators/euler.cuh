@@ -81,8 +81,9 @@ so the result we want becomes:
    dqdd/dq ; dqdd/dv ; dqdd/du ]
 */ 
 template <typename T>
+__host__
 __device__ __forceinline__
-void _integratorGradient(T * ABk, T *s_dqdd, T dt, int dim_AB_r, int dim_AB_c){
+void _integratorGradient(T * ABk, T *s_dqdd, T dt, int dim_AB_r, int dim_AB_c, int num_pos){
     int starty, dy, startx, dx;
     doubleLoopVals(&starty,&dy,&startx,&dx);
     // ky will determine the column
@@ -97,7 +98,7 @@ void _integratorGradient(T * ABk, T *s_dqdd, T dt, int dim_AB_r, int dim_AB_c){
         #pragma unroll
         for (int kx = startx; kx < dim_AB_r; kx += dx){ 
             int offset = static_cast<T>(ky == kx ? 1 : 0);
-            float val = offset + dt * dqdd2dxd(s_dqdd,kx,ky);
+            T val = offset + dt * dqdd2dxd<T>(s_dqdd,kx,ky, num_pos=num_pos);
             ABk[ky*dim_AB_r + kx] = val;
         }
     }

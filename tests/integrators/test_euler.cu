@@ -72,6 +72,39 @@ void test_integrator() {
     printf("Test _integrator passed.\n");
 }
 
+template <typename T>
+void test_integrator_gradient() {
+    T tolerance = 1e-4;  // Specify the tolerance value
+
+    std::vector<T> s_dqdd = {-8.4017, 0.0, 1.0};
+    T dt = 0.1;
+    int dim_AB_r = 2;
+    int dim_AB_c = 3;
+    int num_pos = 1;
+
+    // Initialize the expected output
+    std::vector<T> expected_ABk = {
+        1.0, 0.1, 0.0,
+        -0.8402, 1.0, 0.1
+    };
+
+    // Declare variables to hold the computed output
+    std::vector<T> actual_ABk(dim_AB_r * dim_AB_c);
+
+    // Call the function to be tested
+    _integratorGradient(actual_ABk.data(), s_dqdd.data(), dt, dim_AB_r, dim_AB_c, num_pos);
+
+    // Verify the output matches the expected result using assert() with tolerance
+    for (size_t i = 0; i < dim_AB_r; i++) {
+        for (size_t j = 0; j < dim_AB_c; j++) {
+            assert(std::abs(actual_ABk[j * dim_AB_r + i] - expected_ABk[i * dim_AB_c + j]) <= tolerance);
+        }
+    }
+
+    // Print a message if the test passes
+    printf("Test integratorGradient passed.\n");
+}
+
 int main() {
     // test dqdd2dxd function with float
     test_dqdd2dxd<float>();
@@ -81,5 +114,9 @@ int main() {
     test_integrator<float>();
     // test integrator function with double
     test_integrator<double>();
+    // test integratorGradient function with float
+    test_integrator_gradient<float>();
+    // test integratorGradient function with double
+    test_integrator_gradient<double>();
     return 0;
 }
