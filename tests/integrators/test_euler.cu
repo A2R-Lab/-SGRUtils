@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <cmath>
 
-#include <../../src/integrators/euler.cuh>
+#include <src.cuh>
 
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch.hpp>
 template <typename T>
 void test_dqdd2dxd() {
     // Define the constants
