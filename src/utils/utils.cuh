@@ -3,6 +3,7 @@
 */
 #include <cuda_runtime.h>
 #include <stdio.h>
+// #include <iiwa-grid.cuh>
 
 template <typename T>
 __device__ T* shared_memory_proxy()
@@ -55,5 +56,41 @@ void printMatrix(T * matrix, int rows, int cols) {
             printf("%f ", matrix[i*cols + j]);
         }
         printf("\n");
+    }
+}
+
+// copies a matrix (optionally scales by alpha)
+template <typename T, int M, int N>
+__host__ __device__ __forceinline__
+void copyMat(T *dst, T *src, int ld_dst, int ld_src, T alpha = 1.0){
+    int starty, dy, startx, dx; doubleLoopVals(&starty,&dy,&startx,&dx);
+    #pragma unroll
+    for (int ky = starty; ky < N; ky += dy){
+        #pragma unroll
+        for (int kx = startx; kx < M; kx += dx){
+            dst[kx + ld_dst*ky] = alpha*src[kx + ld_src*ky];
+        }
+    }
+}
+
+// loads a matrix into shared memory
+// special case of copyMat, assumes shared memory is of size m*n and original matrix is on disk size ld*n
+template <typename T, int M, int N>
+__host__  __device__ __forceinline__
+void loadMatToShared(T *dst, T *src, int ld){
+    copyMat<T,M,N>(dst, src, M, ld);
+}
+
+// loads the identiy matrix into a variable
+template <typename T, int M, int N>
+__host__  __device__ __forceinline__
+void loadIdentity(T *A, int ld_A){
+    int starty, dy, startx, dx; doubleLoopVals(&starty,&dy,&startx,&dx);
+    #pragma unroll
+    for (int ky = starty; ky < N; ky += dy){
+        #pragma unroll
+        for (int kx = startx; kx < M; kx += dx){
+            A[ky*ld_A + kx] = static_cast<T>(kx == ky ? 1 : 0);
+        }
     }
 }
