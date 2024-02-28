@@ -81,6 +81,27 @@ void loadMatToShared(T *dst, T *src, int ld){
     copyMat<T,M,N>(dst, src, M, ld);
 }
 
+// loads and regularizes a matrix
+template <typename T, int M, int N>
+__host__  __device__ __forceinline__
+void loadAndReg(T *dst, T *src, int ld_dst, int ld_src, T reg){
+    int starty, dy, startx, dx; doubleLoopVals(&starty,&dy,&startx,&dx);
+    #pragma unroll
+    for (int ky = starty; ky < N; ky += dy){
+        #pragma unroll
+        for (int kx = startx; kx < M; kx += dx){
+            dst[kx + ld_dst*ky] = src[kx + ld_src*ky] + (kx == ky ? reg : static_cast<T>(0));
+        }
+    }
+}
+// loads a and regularizes a matrix into shared memory
+// special case of copyMat, assumes shared memory is of size m*n and original matrix is on disk size ld*n
+template <typename T, int M, int N>
+__host__ __device__ __forceinline__
+void loadAndRegToShared(T *dst, T *src, int ld, T reg){
+    loadAndReg<T,M,N>(dst, src, N, ld, reg);
+}
+
 // loads the identiy matrix into a variable
 template <typename T, int M, int N>
 __host__  __device__ __forceinline__
@@ -93,4 +114,58 @@ void loadIdentity(T *A, int ld_A){
             A[ky*ld_A + kx] = static_cast<T>(kx == ky ? 1 : 0);
         }
     }
+}
+
+__host__  __device__
+void parse_csv_to_int_vec(std::vector<int> * parsed_csv, std::string path, int rows, int cols) {
+    std::ifstream data(path);
+    std::string line;
+
+    while(std::getline(data,line))
+    {
+        std::stringstream lineStream(line);
+        std::string cell;
+        while(std::getline(lineStream,cell,','))
+        {
+            (*parsed_csv).push_back(stoi(cell));
+        }
+    }
+}
+
+void parse_csv_to_float_vec(std::vector<float> * parsed_csv, std::string path, int rows, int cols) {
+    std::ifstream data(path);
+    std::string line;
+
+    while(std::getline(data,line))
+    {
+        std::stringstream lineStream(line);
+        std::string cell;
+        while(std::getline(lineStream,cell,','))
+        {
+            (*parsed_csv).push_back(stof(cell));
+        }
+    }
+}
+
+void parse_csv_to_double_vec(std::vector<double> * parsed_csv, std::string path, int rows, int cols) {
+    std::ifstream data(path);
+    std::string line;
+
+    while(std::getline(data,line))
+    {
+        std::stringstream lineStream(line);
+        std::string cell;
+        while(std::getline(lineStream,cell,','))
+        {
+            (*parsed_csv).push_back(stod(cell));
+        }
+    }
+}
+
+template <typename T>
+__device__
+void diagonalize_vector(u_int32_t N, T * arr, T * out) {
+    for (int i = threadIdx.x; i < N * N; i += blockDim.x) {
+        out[i] = (i/N == i%N) ? arr[i/N] : 0;
+    } 
 }

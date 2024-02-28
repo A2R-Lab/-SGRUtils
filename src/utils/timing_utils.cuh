@@ -47,7 +47,8 @@ void printAllTimingStats(const std::vector<double>& tTime,
                          const std::vector<double>& fsweepTime,
                          const std::vector<double>& linesearchTime,
                          const std::vector<double>& bpTime,
-                         const std::vector<double>& nisTime) {
+                         const std::vector<double>& nisTime,
+						 const std::vector<double>& alOuterLoopTime) {
     printf("Printing timing information: \n");
 	std::cout << "Length of tTime: " << tTime.size() << std::endl;
     std::cout << "Length of initTime: " << initTime.size() << std::endl;
@@ -56,6 +57,7 @@ void printAllTimingStats(const std::vector<double>& tTime,
     std::cout << "Length of linesearchTime: " << linesearchTime.size() << std::endl;
     std::cout << "Length of bpTime: " << bpTime.size() << std::endl;
     std::cout << "Length of nisTime: " << nisTime.size() << std::endl;
+	std::cout << "Length of alOuterLoopTime: " << alOuterLoopTime.size() << std::endl;
 	std::ofstream outfile("output.csv");
 	printTimingStats(tTime,"Total", outfile);
 	printTimingStats(initTime,"Initialization", outfile);
@@ -63,6 +65,9 @@ void printAllTimingStats(const std::vector<double>& tTime,
 	printTimingStats(fsweepTime,"Forward Sweep", outfile);
 	printTimingStats(linesearchTime,"Line Search", outfile);
 	printTimingStats(bpTime,"Backwards Pass", outfile);
+	if (alOuterLoopTime.size() > 0) {
+		printTimingStats(alOuterLoopTime,"AL Outer Loop", outfile);
+	}
 	if (nisTime.size() > 0) {
 		printTimingStats(nisTime,"Next Iteration Setup", outfile);
 	}
