@@ -47,6 +47,58 @@ void printMatrixColumnMajor(T * matrix, int rows, int cols) {
     }
 }
 
+// prints col major order matrix to file in numpy format
+template <typename T> __device__ __host__ void printMatrixColMajorNumpy(T *matrix, int rows, int cols)
+{
+    printf("[");
+    for (int i = 0; i < rows; ++i)
+    {
+        printf("[");
+        for (int j = 0; j < cols; ++j)
+        {
+            // Assuming T can be a float, adjust the format specifier if T changes
+            printf("%d", matrix[j * rows + i]);
+            if (j < cols - 1)
+                printf(", ");
+        }
+        printf("]");
+        if (i < rows - 1)
+            printf(",\n");
+    }
+    printf("]\n");
+}
+
+template <typename T>
+__device__ void debugPrint(int threadIdxToPrint, int blockIdxToPrint, const char *message, T *matrix, int rows,
+                           int cols, bool isMatrix = true, int index = -1)
+{
+    if (DEBUG_SWITCH)
+    {
+        __syncthreads();
+        if (threadIdx.x == threadIdxToPrint && blockIdx.x == blockIdxToPrint)
+        {
+            if (index >= 0)
+            {
+                printf("index: %d\n", index);
+            }
+            printf("%s\n", message);
+            if (isMatrix)
+            {
+                sgrutils::printMatrixColumnMajor(matrix, rows, cols);
+            }
+            else
+            {
+                for (int i = 0; i < rows; i++)
+                {
+                    printf("%d, ", matrix[i]);
+                }
+            }
+            printf("\n");
+        }
+        __syncthreads();
+    }
+}
+
 template <typename T>
 __device__
 __host__
